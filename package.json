@@ -1,0 +1,33 @@
+{
+  "name": "mr-src-mangakatana",
+  "keywords": [
+    "mangaright-source"
+  ],
+  "browserlists": [
+    "last 2 iOS major versions"
+  ],
+  "scripts": {
+    "build": "npx webpack",
+    "build-dev": "npx webpack --env development",
+    "flow": "npx flow-bin",
+    "lint": "eslint ./src",
+    "repl": "npx webpack --env development && node ./repl.js"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-flow": "^7.23.3",
+    "flow-bin": "*",
+    "terser-webpack-plugin": "^5.3.10",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@babel/preset-env": "^7.23.9",
+    "babel-loader": "^9.1.3",
+    "babel-plugin-named-asset-import": "^0.3.8",
+    "cheerio": "latest",
+    "core-js": "latest",
+    "crypto-browserify": "latest",
+    "crypto-js": "latest",
+    "node-polyfill-webpack-plugin": "^4.0.0"
+  }
+}
