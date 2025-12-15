@@ -1,6 +1,4 @@
-[mangaright]
-spec.version = "1.0.0"
-api.version = "1.0.0"
+mangaright = "1.0.0"
 
 [plugin]
 id = "52b3a063-ce43-4c21-ae37-4b7cae945306"
