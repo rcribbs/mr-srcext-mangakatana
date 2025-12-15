@@ -1,14 +1,14 @@
 [mangaright]
-spec.version = "1.1.0"
-api.version = "1.1.0"
+spec.version = "1.0.0"
+api.version = "1.0.0"
 
 [plugin]
 id = "52b3a063-ce43-4c21-ae37-4b7cae945306"
 
 [plugin.name]
 primary = "mangakatana"
-aliases = ["mangakatana"]
+aliases = []
 
 [plugin.general]
-version = "1.0.0"
+version = "1.0.1"
 author = "rcribbs"

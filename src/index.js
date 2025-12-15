@@ -205,27 +205,65 @@ function parsePage($): Array<MangaSeries> {
     return finalResults;
 }
 
-export async function searchSeries(
-    seriesName: string, offset: number=0, limit: number=10
-): Promise<MangaSeriesList> {
-    console.debug("searchManga called.", {seriesName, offset, limit});
+function parseSeriesPage(url: URL, text: string): MangaSeries {
+    const $ = cheerio.load(text);
 
+    const titleElem = $(".info > h1");
+    const cleanedTitle = titleElem.text().replace(
+        /\s+/g, " "
+    ).replace(
+        /&amp;/g, "&"
+    ).trim();
+    const urlComponents = (new URL(url)).pathname.split("/");
+    const id = urlComponents[urlComponents.length-1];
+
+    const coverElem = $("img[alt='[cover]' i]");
+    const coverUrl = coverElem.attr("src");
+
+    return new MangaSeries({
+        identifier: id.toString(),
+        name: cleanedTitle.toString(),
+        ranking: 0,
+        coverUrl: coverUrl.toString()
+    });
+}
+
+export async function searchSeries(
+    seriesName: string,
+    offset: number=0,
+    limit: number=Number.MAX_SAFE_INTEGER
+): Promise<MangaSeriesList> {
+    console.debug("searchSeries called.", {seriesName, offset, limit});
+
+    const sanitizedName = seriesName.replace(/\s+/g, "+");
     let finalUrl = new URL(`${BASE_URL}`);
     let searchParams = new URLSearchParams({
-        search: seriesName,
+        search: sanitizedName,
         search_by: "book_name"
     });
     finalUrl.search = searchParams.toString();
 
-    const sanitizedName = seriesName.replace(/\w+/g, "+");
+    let response = await fetch(finalUrl);
 
-    let currentUrl = finalUrl;
+    if(response.redirected) {
+        // Special case for exact match
+        const series = await parseSeriesPage(
+            response.url, await response.text()
+        );
+
+        return new MangaSeriesList({
+            results: [series],
+        });
+    }
+
     let allResults = [];
-    while (true) {
-        let response = await fetch(currentUrl);
+    let maxRank = 0;
+    do {
         const text = await response.text();
 
         const $ = cheerio.load(text);
+
+        console.log(text);
 
         const pageResults = $("#book_list > .item").map((i, element) => {
             const titleElem = $(element).find(".title > a");
@@ -244,9 +282,10 @@ export async function searchSeries(
             const newSeries = new MangaSeries({
                 identifier: id.toString(),
                 name: cleanedTitle.toString(),
-                ranking: i,
+                ranking: maxRank,
                 coverUrl: coverUrl.toString()
             });
+            maxRank += 1;
             console.debug(newSeries);
             return newSeries;
         }).toArray();
@@ -272,8 +311,9 @@ export async function searchSeries(
         }
 
         const nextPageUrl = nextPageElem.attr("href");
-        currentUrl = new URL(nextPageUrl);
-    }
+        const nextUrl = new URL(nextPageUrl);
+        response = await fetch(nextUrl);
+    } while (true)
 
     console.debug(allResults.length);
 
@@ -309,7 +349,7 @@ export async function seriesInfo(seriesIdentifier: string): Promise<MangaSeries>
 export async function listChapters(
     seriesIdentifier: string,
     offset: number=0,
-    limit: number=500,
+    limit: number=Number.MAX_SAFE_INTEGER,
     since: ?Date=null,
     order: string='asc'
 ): Promise<ChapterList> {
@@ -322,23 +362,28 @@ export async function listChapters(
     const container = $(".chapters");
     const chapterNumberRegex = /ch(?:ap(?:ter)?)?[\s\.]*(\d+(\.\d+)?)/i;
     const chapters = container.find(".chapter").map((i, element) => {
+        const chapContainer = $(element).closest("tr");
+        const updateElem = chapContainer.find(".update_time");
+        const updated = Date.parse(updateElem.text());
+
+        if (updated < since) {
+            return;
+        }
+
         const titleElem = $(element).find("a");
         const title = titleElem.text();
         const cleanedTitle = $(titleElem).text().replace(/\s+/g, " ").trim();
 
         const numberMatch = cleanedTitle.match(chapterNumberRegex);
         if (!numberMatch) {
-            return null;
+            return;
         }
 
-        const container = $(element).closest("tr");
-        const updateElem = container.find(".update_time");
 
         const number = numberMatch[1];
         const url = new URL(titleElem.attr("href"));
         const urlComponents = url.pathname.split("/");
         const chapterId = urlComponents[urlComponents.length-1];
-        const updated = Date.parse(updateElem.text());
 
         const identifier = {
             chapId: chapterId,
@@ -354,7 +399,7 @@ export async function listChapters(
             updated,
             // published: publishAt,
         });
-    });
+    }).filter(x => x);
 
     // console.debug(`Creating final chapter list.`, { chapters });
     const chapList = new ChapterList({
