@@ -228,14 +228,14 @@ function parseSeriesPage(url: URL, text: string): MangaSeries {
     });
 }
 
-export async function searchSeries(
+export async function searchManga(
     seriesName: string,
     offset: number=0,
     limit: number=Number.MAX_SAFE_INTEGER
 ): Promise<MangaSeriesList> {
-    console.debug("searchSeries called.", {seriesName, offset, limit});
+    console.log("searchManga called.", {seriesName, offset, limit});
 
-    const sanitizedName = seriesName.replace(/\s+/g, "+");
+    const sanitizedName = String(seriesName).replace(/\s+/g, "+");
     let finalUrl = new URL(`${BASE_URL}`);
     let searchParams = new URLSearchParams({
         search: sanitizedName,
