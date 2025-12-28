@@ -1,9 +1,7 @@
 // @flow
-import "core-js/stable";
 import "core-js/features/url";
 
 const cheerio = require("cheerio");
-const CryptoJS = require("crypto-js");
 
 class ChapterListItem {
     number: string;
@@ -243,6 +241,7 @@ export async function searchManga(
     });
     finalUrl.search = searchParams.toString();
 
+    console.debug("Making initial request for serach.", { finalUrl });
     let response = await fetch(finalUrl);
 
     if(response.redirected) {
@@ -262,8 +261,6 @@ export async function searchManga(
         const text = await response.text();
 
         const $ = cheerio.load(text);
-
-        console.log(text);
 
         const pageResults = $("#book_list > .item").map((i, element) => {
             const titleElem = $(element).find(".title > a");
@@ -304,14 +301,15 @@ export async function searchManga(
             break;
         }
 
-        const nextPageElem = $("a.next.page-numbers").get(0);
-        if (!nextPageElem) {
+        const nextPageElem = $("a.next.page-numbers").first();
+        if (!nextPageElem || !nextPageElem.attr("href")) {
             console.debug("No more pages left")
             break;
         }
 
         const nextPageUrl = nextPageElem.attr("href");
         const nextUrl = new URL(nextPageUrl);
+        console.debug("Loading next page.", { nextUrl, nextPageUrl })
         response = await fetch(nextUrl);
     } while (true)
 

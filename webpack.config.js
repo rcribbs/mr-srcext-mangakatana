@@ -24,6 +24,7 @@ module.exports = (env) => ({
         ]
     },
     optimization: {
+        usedExports: true,
         minimize: env.producion === true,
         minimizer: [
             new TerserPlugin({

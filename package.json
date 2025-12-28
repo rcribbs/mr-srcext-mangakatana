@@ -1,5 +1,6 @@
 {
   "name": "mr-src-mangakatana",
+  "sideEffects": false,
   "keywords": [
     "mangaright-source"
   ],
@@ -26,8 +27,6 @@
     "babel-plugin-named-asset-import": "^0.3.8",
     "cheerio": "latest",
     "core-js": "latest",
-    "crypto-browserify": "latest",
-    "crypto-js": "latest",
     "node-polyfill-webpack-plugin": "^4.0.0"
   }
 }

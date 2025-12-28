@@ -4,6 +4,8 @@
      [
        "@babel/preset-env",
        {
+         "modules": "umd",
+         "useBuiltIns": "entry",
          "modules": "umd"
        }
      ]

@@ -1,4 +1,4 @@
-mangaright = "1.0.0"
+mangaright = "0.1.0"
 
 [plugin]
 id = "52b3a063-ce43-4c21-ae37-4b7cae945306"
@@ -8,5 +8,5 @@ primary = "mangakatana"
 aliases = []
 
 [plugin.general]
-version = "1.0.3"
+version = "1.0.4"
 author = "rcribbs"
