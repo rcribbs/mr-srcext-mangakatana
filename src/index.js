@@ -168,6 +168,24 @@ export const EXTENSION_ID: string="52b3a063-ce43-4c21-ae37-4b7cae945306";
 
 const BASE_URL = "https://mangakatana.com";
 
+function encodeID({ chapId, seriesId }) {
+    const identifier = {
+        chapId,
+        seriesId,
+    };
+
+    const idString = JSON.stringify(identifier);
+    return new Buffer(idString).toString("base64");
+}
+
+function decodeID(identifier) {
+    const plaintext = new Buffer(
+        identifier, "base64"
+    ).toString("binary");
+
+    return JSON.parse(plaintext);
+}
+
 function parsePage($): Array<MangaSeries> {
     const elements = $("div#series-list div.col.no-flag");
     const idRegex = /\/series\/(?<id>\d+)\/[^\/]*/;
@@ -344,6 +362,7 @@ export async function seriesInfo(seriesIdentifier: string): Promise<MangaSeries>
     });
 }
 
+
 export async function listChapters(
     seriesIdentifier: string,
     offset: number=0,
@@ -383,19 +402,12 @@ export async function listChapters(
         const urlComponents = url.pathname.split("/");
         const chapterId = urlComponents[urlComponents.length-1];
 
-        const identifier = {
-            chapId: chapterId,
-            seriesId: seriesIdentifier,
-        };
-
+        const identifier = encodeID({ chapId: chapterId, seriesId: seriesIdentifier })
         return new ChapterListItem({
-            identifier: btoa(JSON.stringify(identifier)).toString(),
+            identifier,
             title: cleanedTitle.toString(),
             number,
-            // group: groupName,
-            // created: createdAt,
             updated,
-            // published: publishAt,
         });
     }).filter(x => x);
 
@@ -410,7 +422,8 @@ export async function listChapters(
 export async function getChapter(chapterIdentifier: string): Promise<ChapterData> {
     // TODO: implement get chapter logic here.
     //
-    const { chapId, seriesId } = JSON.parse(atob(chapterIdentifier));
+
+    const { chapId, seriesId } = decodeID(chapterIdentifier)
 
     let response = await fetch(
         `${BASE_URL}/manga/${seriesId}/${chapId}`
